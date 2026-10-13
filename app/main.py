@@ -83,3 +83,23 @@ def ignore_work_polling(path: str):
 def ignore_people_polling(path: str):
     return []
 
+@app.api_route("/api/v1/analytics/overview", methods=["GET", "OPTIONS"])
+def get_analytics_overview():
+    return {
+        "status": "ok",
+        "days": 30,
+        "total_students": 150,
+        "active_students": 120,
+        "total_submissions": 450,
+        "accuracy_rate": 88.5,
+        "overview": {
+            "daily_active_users": 85,
+            "practice_sessions_completed": 310,
+            "coding_challenges_solved": 195
+        }
+    }
+
+@app.api_route("/api/v1/chat/{path:path}", methods=["GET", "POST", "OPTIONS"])
+def handle_chat_channels(path: str):
+    return []
+

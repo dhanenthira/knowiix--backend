@@ -81,6 +81,26 @@ def seed_database_records():
             db.add(admin_user)
             logger.info("Master Administrator verified in MySQL database.")
 
+        skillprep_admin = db.query(UserModel).filter(UserModel.email == "admin@skillprep.edu").first()
+        if not skillprep_admin:
+            skillprep_admin = UserModel(
+                id="user_admin_skillprep",
+                student_id="ADM-002",
+                email="admin@skillprep.edu",
+                password=get_password_hash("admin123"),
+                name="SkillPrep Administrator",
+                role="admin",
+                college_name="SkillPrep Institute",
+                department="Administration",
+                graduation_year=2026,
+                bio="Master Administrator for SkillPrep Platform",
+                avatar_url="https://api.dicebear.com/7.x/avataaars/svg?seed=SkillPrepAdmin",
+                is_active=True,
+                created_at=datetime.utcnow() - timedelta(days=90)
+            )
+            db.add(skillprep_admin)
+            logger.info("SkillPrep Administrator verified in MySQL database.")
+
         # 2. Ensure demo student account exists
         demo_student = db.query(UserModel).filter(UserModel.email == "student@codearena.com").first()
         if not demo_student:
@@ -240,6 +260,14 @@ def seed_database_records():
             )
             db.add(test)
             logger.info("Grand Assessment test seeded.")
+
+        # 6. Ensure demo coding problems are seeded
+        if db.query(CodingProblemModel).count() <= 1:
+            try:
+                from scripts.import_demo_problems import import_all_problems
+                import_all_problems()
+            except Exception as ex:
+                logger.warning(f"Could not auto-seed demo coding problems: {ex}")
 
         db.commit()
     except Exception as e:
