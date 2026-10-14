@@ -40,21 +40,42 @@ def on_startup():
     # Initialize MySQL tables on server start
     init_tables()
 
-# Include Routers under /api/v1
-api_prefix = settings.API_V1_STR
-app.include_router(auth_router, prefix=api_prefix)
-app.include_router(admin_router, prefix=api_prefix)
-app.include_router(students_router, prefix=api_prefix)
-app.include_router(questions_router, prefix=api_prefix)
-app.include_router(lessons_router, prefix=api_prefix)
-app.include_router(practice_router, prefix=api_prefix)
-app.include_router(coding_router, prefix=api_prefix)
-app.include_router(tests_router, prefix=api_prefix)
-app.include_router(friends_router, prefix=api_prefix)
-app.include_router(battle_router, prefix=api_prefix)
-app.include_router(leaderboard_router, prefix=api_prefix)
-app.include_router(reports_router, prefix=api_prefix)
-app.include_router(notifications_router, prefix=api_prefix)
+# Include Routers under /api/v1 and alias under /api
+for pfx in [settings.API_V1_STR, "/api"]:
+    app.include_router(auth_router, prefix=pfx)
+    app.include_router(admin_router, prefix=pfx)
+    app.include_router(students_router, prefix=pfx)
+    app.include_router(questions_router, prefix=pfx)
+    app.include_router(lessons_router, prefix=pfx)
+    app.include_router(practice_router, prefix=pfx)
+    app.include_router(coding_router, prefix=pfx)
+    app.include_router(tests_router, prefix=pfx)
+    app.include_router(friends_router, prefix=pfx)
+    app.include_router(battle_router, prefix=pfx)
+    app.include_router(leaderboard_router, prefix=pfx)
+    app.include_router(reports_router, prefix=pfx)
+    app.include_router(notifications_router, prefix=pfx)
+
+# Aliases for singular /api/student/profile and /api/v1/student/profile
+from app.schemas.user import UserResponse
+from app.api.auth import get_current_user
+from app.core.database import get_db
+from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException
+from app.models.sql_models import UserModel
+
+@app.get("/api/student/profile", response_model=UserResponse)
+@app.get("/api/v1/student/profile", response_model=UserResponse)
+def get_student_profile_singular(
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    user = db.query(UserModel).filter(UserModel.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserResponse.model_validate(user, from_attributes=True)
 
 @app.get("/")
 def root():

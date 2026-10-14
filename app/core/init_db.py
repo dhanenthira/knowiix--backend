@@ -131,6 +131,35 @@ def seed_database_records():
             db.add(demo_student)
             logger.info("Demo Student account (Alex Mercer) verified in MySQL database.")
 
+        skillprep_student = db.query(UserModel).filter(UserModel.email == "student@skillprep.edu").first()
+        if not skillprep_student:
+            skillprep_student = UserModel(
+                id="user_student_skillprep",
+                student_id="SP-2026-1001",
+                email="student@skillprep.edu",
+                password=get_password_hash("student123"),
+                name="Ananya Kumar",
+                role="student",
+                college_name="SkillPrep Academy",
+                department="Computer Science & Engineering",
+                graduation_year=2026,
+                bio="Aspiring Software Engineer & SkillPrep Student",
+                avatar_url="https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya",
+                streak_days=12,
+                total_points=3450,
+                problems_solved=142,
+                questions_solved=280,
+                overall_accuracy=89.5,
+                coding_problems_solved=48,
+                battles_won=15,
+                followers_count=35,
+                following_count=18,
+                is_active=True,
+                created_at=datetime.utcnow() - timedelta(days=30)
+            )
+            db.add(skillprep_student)
+            logger.info("SkillPrep Student account (Ananya Kumar) verified in MySQL database.")
+
         # 3. Ensure starter questions exist
         if db.query(QuestionModel).count() == 0:
             starter_questions = [
@@ -268,6 +297,14 @@ def seed_database_records():
                 import_all_problems()
             except Exception as ex:
                 logger.warning(f"Could not auto-seed demo coding problems: {ex}")
+
+        # 7. Ensure learning modules and study notes exist
+        if db.query(LearningModuleModel).count() < 3:
+            try:
+                from scripts.seed_learning import seed_learning_data
+                seed_learning_data()
+            except Exception as ex:
+                logger.warning(f"Could not auto-seed learning modules: {ex}")
 
         db.commit()
     except Exception as e:
