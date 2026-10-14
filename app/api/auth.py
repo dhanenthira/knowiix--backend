@@ -44,11 +44,30 @@ def get_current_admin_user(token: str = Depends(oauth2_scheme), db: Session = De
 
     if token == "admin_demo_jwt_token":
         db_admin = db.query(UserModel).filter(UserModel.role == "admin").first()
-        if db_admin:
-            return UserResponse.model_validate(db_admin, from_attributes=True)
+        if not db_admin:
+            db_admin = UserModel(
+                id="user_admin_01",
+                student_id="ADM-001",
+                email="admin@codearena.com",
+                password=get_password_hash("adminpassword123"),
+                name="System Administrator",
+                role="admin",
+                college_name="CodeArena HQ",
+                department="Platform Core",
+                graduation_year=2024,
+                bio="Platform Administrator",
+                avatar_url="https://api.dicebear.com/7.x/bottts/svg?seed=admin",
+                is_active=True,
+                created_at=datetime.utcnow()
+            )
+            db.add(db_admin)
+            db.commit()
+            db.refresh(db_admin)
+        return UserResponse.model_validate(db_admin, from_attributes=True)
             
     current_user = get_current_user(token, db)
-    if current_user.role != RoleEnum.ADMIN:
+    user_role = str(current_user.role.value if hasattr(current_user.role, 'value') else current_user.role).lower()
+    if user_role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required")
     return current_user
 
@@ -81,6 +100,34 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
             overall_accuracy=89.5,
             coding_problems_solved=48,
             battles_won=15,
+            is_active=True,
+            created_at=datetime.utcnow()
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+
+    # Auto-provision demo admin if missing
+    if not db_user and email_clean in ["admin@skillprep.edu", "admin@codearena.com"]:
+        db_user = UserModel(
+            id="user_admin_skillprep",
+            student_id="ADM-001",
+            email=email_clean,
+            password=get_password_hash("admin123"),
+            name="SkillPrep Administrator",
+            role="admin",
+            college_name="CodeArena HQ",
+            department="Platform Core",
+            graduation_year=2024,
+            bio="Platform Administrator",
+            avatar_url="https://api.dicebear.com/7.x/bottts/svg?seed=admin",
+            streak_days=45,
+            total_points=12500,
+            problems_solved=320,
+            questions_solved=850,
+            overall_accuracy=94.5,
+            coding_problems_solved=140,
+            battles_won=42,
             is_active=True,
             created_at=datetime.utcnow()
         )
