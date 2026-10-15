@@ -8,6 +8,7 @@ class LessonTopic(BaseModel):
     slug: str
     order: int
     is_completed: bool = False
+    subtopic: Optional[str] = None
 
 class CodeSnippet(BaseModel):
     language: str
@@ -18,6 +19,7 @@ class LessonDetail(BaseModel):
     id: str
     module_id: str
     topic_id: str
+    subtopic: Optional[str] = None
     title: str
     intro: str
     definition: str

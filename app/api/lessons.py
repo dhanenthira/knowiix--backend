@@ -20,7 +20,9 @@ def get_all_modules(db: Session = Depends(get_db)):
 def get_module_lessons(module_id: str, db: Session = Depends(get_db)):
     if not db:
         raise HTTPException(status_code=503, detail="Database unavailable")
-    lessons = db.query(LessonModel).filter(LessonModel.module_id == module_id).order_by(LessonModel.order).all()
+    lessons = db.query(LessonModel).filter(
+        (LessonModel.module_id == module_id) | (LessonModel.category == module_id)
+    ).order_by(LessonModel.order).all()
     return [LessonDetail.model_validate(l, from_attributes=True) for l in lessons]
 
 @router.get("/{lesson_id}", response_model=LessonDetail)
