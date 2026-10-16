@@ -10,6 +10,7 @@ from app.models.sql_models import (
     QuestionModel,
     CodingProblemModel,
     ProblemSolvedModel,
+    QuestionSolvedModel,
     LearningModuleModel,
     LessonModel,
     DailySetModel,

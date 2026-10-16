@@ -5,7 +5,7 @@ from app.schemas.user import UserResponse
 from app.api.auth import get_current_user
 from app.core.security import oauth2_scheme
 from app.core.database import get_db
-from app.models.sql_models import UserModel, DailySetModel, LearningModuleModel, AssessmentTestModel, QuestionModel, CodingProblemModel, NotificationModel, SubmissionModel
+from app.models.sql_models import UserModel, DailySetModel, LearningModuleModel, AssessmentTestModel, QuestionModel, CodingProblemModel, NotificationModel, SubmissionModel, QuestionSolvedModel
 from app.schemas.practice import DailySetSummary
 from app.schemas.lesson import ModuleSummary
 from app.schemas.test import AssessmentTest
@@ -100,11 +100,41 @@ def get_student_dashboard(
                 "total": total_code_count or 48
             },
             "category_questions": {
-                "aptitude": apt_q_count or 165,
+                "aptitude": apt_q_count or 100,
                 "technical": tech_q_count or 220,
                 "communication": comm_q_count or 140,
                 "coding": total_code_count or 65
+            },
+            "aptitude_progress": {
+                "total_problems": apt_q_count or 100,
+                "problems_solved": db.query(QuestionSolvedModel).filter(
+                    QuestionSolvedModel.user_id == user.id,
+                    QuestionSolvedModel.category.ilike("%aptitude%")
+                ).count() if user else 35,
+                "problems_remaining": max(0, (apt_q_count or 100) - (db.query(QuestionSolvedModel).filter(
+                    QuestionSolvedModel.user_id == user.id,
+                    QuestionSolvedModel.category.ilike("%aptitude%")
+                ).count() if user else 35)),
+                "progress_percentage": round(((db.query(QuestionSolvedModel).filter(
+                    QuestionSolvedModel.user_id == user.id,
+                    QuestionSolvedModel.category.ilike("%aptitude%")
+                ).count() if user else 35) / (apt_q_count or 100)) * 100, 1)
             }
+        },
+        "aptitude_progress": {
+            "total_problems": apt_q_count or 100,
+            "problems_solved": db.query(QuestionSolvedModel).filter(
+                QuestionSolvedModel.user_id == user.id,
+                QuestionSolvedModel.category.ilike("%aptitude%")
+            ).count() if user else 35,
+            "problems_remaining": max(0, (apt_q_count or 100) - (db.query(QuestionSolvedModel).filter(
+                QuestionSolvedModel.user_id == user.id,
+                QuestionSolvedModel.category.ilike("%aptitude%")
+            ).count() if user else 35)),
+            "progress_percentage": round(((db.query(QuestionSolvedModel).filter(
+                QuestionSolvedModel.user_id == user.id,
+                QuestionSolvedModel.category.ilike("%aptitude%")
+            ).count() if user else 35) / (apt_q_count or 100)) * 100, 1)
         },
         "daily_challenges": [DailySetSummary.model_validate(s, from_attributes=True).model_dump() for s in daily_sets],
         "learning_modules": [ModuleSummary.model_validate(m, from_attributes=True).model_dump() for m in modules],
