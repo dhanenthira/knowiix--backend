@@ -9,6 +9,7 @@ from app.models.sql_models import (
     UserModel,
     QuestionModel,
     CodingProblemModel,
+    ProblemSolvedModel,
     LearningModuleModel,
     LessonModel,
     DailySetModel,
@@ -305,6 +306,15 @@ def seed_database_records():
                 seed_learning_data()
             except Exception as ex:
                 logger.warning(f"Could not auto-seed learning modules: {ex}")
+
+        # 8. Ensure W3Schools learning dashboard categories & tutorials exist
+        from app.models.category import CategoryModel
+        if db.query(CategoryModel).count() < 13:
+            try:
+                from scripts.seed_learning_dashboard import seed_learning_dashboard_data
+                seed_learning_dashboard_data()
+            except Exception as ex:
+                logger.warning(f"Could not auto-seed learning dashboard: {ex}")
 
         db.commit()
     except Exception as e:

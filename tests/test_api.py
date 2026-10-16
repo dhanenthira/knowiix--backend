@@ -38,15 +38,15 @@ def test_student_dashboard():
 def test_coding_problems_and_run():
     response = client.get("/api/v1/coding/problems")
     assert response.status_code == 200
-    problems = response.json()
-    assert len(problems) > 0
-    prob_id = problems[0]["id"]
+    data = response.json()
+    items = data["items"] if isinstance(data, dict) and "items" in data else data
+    assert len(items) > 0
     
-    # Run code
+    # Run code on hello-world
     run_resp = client.post("/api/v1/coding/run", json={
-        "problem_id": prob_id,
+        "problem_id": "hello-world",
         "language": "python",
-        "code": "def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        d = target - num\n        if d in seen: return f'{seen[d]} {i}'\n        seen[num] = i\n    return ''\n\nimport sys\nlines = sys.stdin.read().splitlines()\nif lines:\n    print(two_sum(list(map(int, lines[0].split())), int(lines[1])))"
+        "code": "print('Hello, World!')"
     })
     assert run_resp.status_code == 200
     res_data = run_resp.json()

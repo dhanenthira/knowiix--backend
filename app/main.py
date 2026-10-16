@@ -16,6 +16,11 @@ from app.api.battle_rooms import router as battle_router
 from app.api.leaderboard import router as leaderboard_router
 from app.api.reports import router as reports_router
 from app.api.notifications import router as notifications_router
+from app.routers.dashboard import router as dashboard_router
+from app.routers.categories import router as categories_router
+from app.routers.tutorials import router as tutorials_router
+from app.routers.bookmarks import router as bookmarks_router
+from app.routers.progress import router as progress_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -55,6 +60,11 @@ for pfx in [settings.API_V1_STR, "/api"]:
     app.include_router(leaderboard_router, prefix=pfx)
     app.include_router(reports_router, prefix=pfx)
     app.include_router(notifications_router, prefix=pfx)
+    app.include_router(dashboard_router, prefix=pfx)
+    app.include_router(categories_router, prefix=pfx)
+    app.include_router(tutorials_router, prefix=pfx)
+    app.include_router(bookmarks_router, prefix=pfx)
+    app.include_router(progress_router, prefix=pfx)
 
 # Aliases for singular /api/student/profile and /api/v1/student/profile
 from app.schemas.user import UserResponse

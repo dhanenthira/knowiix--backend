@@ -17,6 +17,8 @@ class UserBase(BaseModel):
     graduation_year: Optional[int] = None
     bio: Optional[str] = ""
     avatar_url: Optional[str] = None
+    full_name: Optional[str] = None
+    profile_image_url: Optional[str] = None
 
 class UserProfileUpdate(BaseModel):
     name: Optional[str] = None
