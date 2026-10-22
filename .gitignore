@@ -47,8 +47,8 @@ venv.bak/
 *.bin
 *.weights
 *.ckpt
-*.pb
-models/
+/models/
+!app/models/
 
 # Database / SQLite
 *.sqlite
