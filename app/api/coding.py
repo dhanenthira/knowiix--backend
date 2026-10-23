@@ -363,6 +363,11 @@ def submit_code_solution(
         timeout_seconds=min(problem.time_limit_seconds or 2.0, 5.0)
     )
 
+    calculated_score = 100.0 if result.status == "Accepted" else (
+        round((result.passed_test_cases / max(1, result.total_test_cases)) * 100.0, 1)
+        if result.total_test_cases else float(result.points_awarded)
+    )
+
     # Record submission
     sub_id = f"sub_code_{uuid.uuid4().hex[:10]}"
     new_sub = SubmissionModel(
@@ -377,7 +382,8 @@ def submit_code_solution(
         total_test_cases=result.total_test_cases,
         execution_time_ms=result.execution_time_ms,
         memory_used_mb=result.memory_used_kb / 1024.0,
-        score=float(result.points_awarded),
+        score=calculated_score,
+        max_score=100.0,
         submitted_at=datetime.utcnow()
     )
     db.add(new_sub)
@@ -393,6 +399,7 @@ def submit_code_solution(
     problem.acceptance_rate = round((total_acc / max(1, problem.total_submissions)) * 100, 1)
 
     # Handle Accepted verdict
+    db_user = db.query(UserModel).filter(UserModel.id == current_user.id).first()
     if result.status == "Accepted":
         # Check if already recorded in problem_solved
         already_solved = db.query(ProblemSolvedModel).filter(
@@ -411,11 +418,19 @@ def submit_code_solution(
             db.flush()
 
             # Update User total points and coding_problems_solved count accurately
-            db_user = db.query(UserModel).filter(UserModel.id == current_user.id).first()
             if db_user:
                 distinct_solved = db.query(ProblemSolvedModel).filter(ProblemSolvedModel.user_id == current_user.id).count()
                 db_user.coding_problems_solved = distinct_solved
                 db_user.total_points = (db_user.total_points or 0) + result.points_awarded
+
+    # Update user accuracy and streak
+    if db_user:
+        all_subs = db.query(SubmissionModel).filter(SubmissionModel.user_id == current_user.id).all()
+        if all_subs:
+            accepted_count = sum(1 for s in all_subs if s.status and s.status.lower() == "accepted")
+            db_user.overall_accuracy = round((accepted_count / len(all_subs)) * 100.0, 1)
+        if result.status == "Accepted":
+            db_user.streak_days = max(1, db_user.streak_days or 1)
 
     db.commit()
     return result

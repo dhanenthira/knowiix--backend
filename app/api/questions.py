@@ -96,23 +96,27 @@ def get_categories(db: Session = Depends(get_db)):
     ]
 
 from pydantic import BaseModel
-from app.models.sql_models import QuestionSolvedModel, UserModel
+from app.models.sql_models import QuestionSolvedModel, UserModel, SubmissionModel
 from app.api.auth import get_current_user
 from app.core.security import oauth2_scheme
 from app.schemas.user import UserResponse
 
 def get_optional_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[UserModel]:
-    if not token or not db:
-        return db.query(UserModel).filter(UserModel.role == "student").first() if db else None
-    try:
-        cur = get_current_user(token=token, db=db)
-        if cur:
-            u = db.query(UserModel).filter(UserModel.id == cur.id).first()
-            if u:
-                return u
-    except Exception:
-        pass
-    return db.query(UserModel).filter(UserModel.role == "student").first() if db else None
+    if token and db:
+        try:
+            cur = get_current_user(token=token, db=db)
+            if cur:
+                u = db.query(UserModel).filter(UserModel.id == cur.id).first()
+                if u:
+                    return u
+        except Exception:
+            pass
+    if db:
+        return (
+            db.query(UserModel).filter(UserModel.id == "user_student_01").first()
+            or db.query(UserModel).filter(UserModel.role == "student").first()
+        )
+    return None
 
 class QuestionSolveRequest(BaseModel):
     question_id: str
@@ -170,13 +174,17 @@ def solve_aptitude_problem(
 ):
     """
     Tracks that a user has solved an aptitude question.
-    Saves in the database (QuestionSolvedModel) so it persists across logins.
+    Saves in QuestionSolvedModel and SubmissionModel so it immediately appears in
+    Recent Assessments, Performance Overview, and student stats.
     """
     if not db:
         raise HTTPException(status_code=503, detail="Database unavailable")
 
     if not user:
-        user = db.query(UserModel).filter(UserModel.role == "student").first()
+        user = (
+            db.query(UserModel).filter(UserModel.id == "user_student_01").first()
+            or db.query(UserModel).filter(UserModel.role == "student").first()
+        )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -201,9 +209,38 @@ def solve_aptitude_problem(
             user.questions_solved = 1
         if user.total_points is not None:
             user.total_points += 10
-        db.commit()
+        user.streak_days = max(1, (user.streak_days or 0) + 1)
     else:
         already_solved = True
+
+    # Record real SubmissionModel entry for Recent Assessments and Performance Overview
+    sub_existing = db.query(SubmissionModel).filter(
+        SubmissionModel.user_id == user.id,
+        SubmissionModel.problem_id == req.question_id
+    ).first()
+    if not sub_existing:
+        sub_id = f"sub_apt_{uuid.uuid4().hex[:10]}"
+        new_sub = SubmissionModel(
+            id=sub_id,
+            user_id=user.id,
+            problem_id=req.question_id,
+            submission_type="practice",
+            status="Accepted",
+            passed_test_cases=1,
+            total_test_cases=1,
+            score=100.0,
+            max_score=100.0,
+            submitted_at=datetime.utcnow()
+        )
+        db.add(new_sub)
+
+    # Recompute user accuracy
+    all_subs = db.query(SubmissionModel).filter(SubmissionModel.user_id == user.id).all()
+    if all_subs:
+        acc_count = sum(1 for s in all_subs if s.status and s.status.lower() == "accepted")
+        user.overall_accuracy = round((acc_count / len(all_subs)) * 100.0, 1)
+
+    db.commit()
 
     total_problems = db.query(QuestionModel).filter(QuestionModel.category.ilike("%aptitude%")).count() or 100
     problems_solved = db.query(QuestionSolvedModel).filter(
@@ -244,7 +281,10 @@ def batch_solve_aptitude(
     if not db:
         raise HTTPException(status_code=503, detail="Database unavailable")
     if not user:
-        user = db.query(UserModel).filter(UserModel.role == "student").first()
+        user = (
+            db.query(UserModel).filter(UserModel.id == "user_student_01").first()
+            or db.query(UserModel).filter(UserModel.role == "student").first()
+        )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -263,6 +303,24 @@ def batch_solve_aptitude(
             ))
             newly_solved_count += 1
 
+        sub_existing = db.query(SubmissionModel).filter(
+            SubmissionModel.user_id == user.id,
+            SubmissionModel.problem_id == q_id
+        ).first()
+        if not sub_existing:
+            db.add(SubmissionModel(
+                id=f"sub_apt_{uuid.uuid4().hex[:10]}",
+                user_id=user.id,
+                problem_id=q_id,
+                submission_type="practice",
+                status="Accepted",
+                passed_test_cases=1,
+                total_test_cases=1,
+                score=100.0,
+                max_score=100.0,
+                submitted_at=datetime.utcnow()
+            ))
+
     if newly_solved_count > 0:
         if user.questions_solved is not None:
             user.questions_solved += newly_solved_count
@@ -270,7 +328,14 @@ def batch_solve_aptitude(
             user.questions_solved = newly_solved_count
         if user.total_points is not None:
             user.total_points += newly_solved_count * 10
-        db.commit()
+        user.streak_days = max(1, (user.streak_days or 0) + 1)
+
+    all_subs = db.query(SubmissionModel).filter(SubmissionModel.user_id == user.id).all()
+    if all_subs:
+        acc_count = sum(1 for s in all_subs if s.status and s.status.lower() == "accepted")
+        user.overall_accuracy = round((acc_count / len(all_subs)) * 100.0, 1)
+
+    db.commit()
 
     total_problems = db.query(QuestionModel).filter(QuestionModel.category.ilike("%aptitude%")).count() or 100
     problems_solved = db.query(QuestionSolvedModel).filter(

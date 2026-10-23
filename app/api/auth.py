@@ -23,7 +23,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Admin user not found in database")
 
     if token in ["student_demo_jwt_token", "demo_jwt_token"]:
-        db_student = db.query(UserModel).filter(UserModel.role == "student").first()
+        db_student = (
+            db.query(UserModel).filter(UserModel.id == "user_student_01").first()
+            or db.query(UserModel).filter(UserModel.role == "student").first()
+        )
         if db_student:
             return UserResponse.model_validate(db_student, from_attributes=True)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Student user not found in database")

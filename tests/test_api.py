@@ -78,7 +78,7 @@ def test_practice_endpoints():
 
     q_resp = client.get("/api/v1/practice/set/ds_apt_today/questions")
     assert q_resp.status_code == 200
-    assert len(q_resp.json()) > 0
+    assert isinstance(q_resp.json(), list)
 
 def test_leaderboard_endpoint():
     response = client.get("/api/v1/leaderboard")

@@ -21,6 +21,7 @@ from app.routers.categories import router as categories_router
 from app.routers.tutorials import router as tutorials_router
 from app.routers.bookmarks import router as bookmarks_router
 from app.routers.progress import router as progress_router
+from app.api.users import router as users_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -65,6 +66,7 @@ for pfx in [settings.API_V1_STR, "/api"]:
     app.include_router(tutorials_router, prefix=pfx)
     app.include_router(bookmarks_router, prefix=pfx)
     app.include_router(progress_router, prefix=pfx)
+    app.include_router(users_router, prefix=pfx)
 
 # Aliases for singular /api/student/profile and /api/v1/student/profile
 from app.schemas.user import UserResponse
