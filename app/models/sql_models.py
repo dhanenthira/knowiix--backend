@@ -31,6 +31,12 @@ class UserModel(Base):
     avatar_url = Column(String(512), default="")
     full_name = Column(String(128), nullable=True)
     profile_image_url = Column(String(512), nullable=True)
+    country = Column(String(64), default="India")
+    github_url = Column(String(255), default="")
+    linkedin_url = Column(String(255), default="")
+    contest_rating = Column(Integer, default=1500)
+    best_contest_rating = Column(Integer, default=1500)
+    global_rank = Column(Integer, nullable=True)
     streak_days = Column(Integer, default=0)
     total_points = Column(Integer, default=0)
     problems_solved = Column(Integer, default=0)
@@ -229,3 +235,55 @@ class LessonModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     module = relationship("LearningModuleModel", back_populates="lessons")
+
+
+class ContestModel(Base):
+    __tablename__ = "contests"
+
+    id = Column(String(64), primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, default="")
+    start_time = Column(DateTime, default=datetime.utcnow)
+    end_time = Column(DateTime, default=datetime.utcnow)
+    duration_minutes = Column(Integer, default=60)
+    total_problems = Column(Integer, default=4)
+    status = Column(String(32), default="upcoming")
+    problem_ids = Column(JSON, default=list)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ContestParticipationModel(Base):
+    __tablename__ = "contest_participations"
+
+    id = Column(String(64), primary_key=True, index=True)
+    user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    contest_id = Column(String(64), ForeignKey("contests.id", ondelete="CASCADE"), index=True, nullable=False)
+    participated_at = Column(DateTime, default=datetime.utcnow)
+    rating = Column(Integer, default=1500)
+    rating_change = Column(Integer, default=0)
+    rank = Column(Integer, nullable=True)
+    total_score = Column(Float, default=0.0)
+    problems_solved = Column(Integer, default=0)
+
+
+class BadgeModel(Base):
+    __tablename__ = "badges"
+
+    id = Column(String(64), primary_key=True, index=True)
+    name = Column(String(128), nullable=False)
+    description = Column(Text, default="")
+    icon = Column(String(128), default="award")
+    category = Column(String(64), default="general")
+    requirement_type = Column(String(64), nullable=False)
+    requirement_value = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class UserBadgeModel(Base):
+    __tablename__ = "user_badges"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    badge_id = Column(String(64), ForeignKey("badges.id", ondelete="CASCADE"), index=True, nullable=False)
+    earned_at = Column(DateTime, default=datetime.utcnow)
+

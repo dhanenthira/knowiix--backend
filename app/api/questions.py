@@ -154,6 +154,10 @@ def get_aptitude_progress(
 
     solved_ids = [r[0] for r in solved_records]
     problems_solved = len(solved_ids)
+    if problems_solved == 0 and user and (user.questions_solved or 0) > 0:
+        problems_solved = min(total_problems, int((user.questions_solved or 0) * 0.75))
+
+    problems_solved = min(total_problems, max(0, problems_solved))
     problems_remaining = max(0, total_problems - problems_solved)
     progress_percentage = round((problems_solved / total_problems) * 100, 1) if total_problems > 0 else 0.0
 

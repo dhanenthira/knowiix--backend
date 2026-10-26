@@ -17,6 +17,7 @@ from app.models.sql_models import (
     AssessmentTestModel,
     NotificationModel,
     UserFollowModel,
+    BadgeModel,
 )
 
 logger = logging.getLogger("codearena.init_db")
@@ -316,6 +317,63 @@ def seed_database_records():
                 seed_learning_dashboard_data()
             except Exception as ex:
                 logger.warning(f"Could not auto-seed learning dashboard: {ex}")
+
+        # 9. Ensure starter achievement badges exist
+        if db.query(BadgeModel).count() == 0:
+            starter_badges = [
+                BadgeModel(
+                    id="badge_first_solve",
+                    name="First AC",
+                    description="Solved your first coding problem on CodeArena.",
+                    icon="award",
+                    category="problem_solving",
+                    requirement_type="problems_solved",
+                    requirement_value=1.0,
+                    created_at=datetime.utcnow()
+                ),
+                BadgeModel(
+                    id="badge_solve_10",
+                    name="Problem Solver",
+                    description="Solved 10 coding problems successfully.",
+                    icon="code",
+                    category="problem_solving",
+                    requirement_type="problems_solved",
+                    requirement_value=10.0,
+                    created_at=datetime.utcnow()
+                ),
+                BadgeModel(
+                    id="badge_solve_50",
+                    name="Algorithm Ace",
+                    description="Solved 50 coding problems successfully.",
+                    icon="zap",
+                    category="problem_solving",
+                    requirement_type="problems_solved",
+                    requirement_value=50.0,
+                    created_at=datetime.utcnow()
+                ),
+                BadgeModel(
+                    id="badge_streak_7",
+                    name="Weekly Warrior",
+                    description="Maintained a consistent 7-day practice streak.",
+                    icon="flame",
+                    category="streak",
+                    requirement_type="streak_days",
+                    requirement_value=7.0,
+                    created_at=datetime.utcnow()
+                ),
+                BadgeModel(
+                    id="badge_fast_sub",
+                    name="Speed Demon",
+                    description="Submitted an accepted solution running under 50ms.",
+                    icon="bolt",
+                    category="performance",
+                    requirement_type="fast_submission",
+                    requirement_value=50.0,
+                    created_at=datetime.utcnow()
+                )
+            ]
+            db.add_all(starter_badges)
+            logger.info("Starter achievement badges seeded.")
 
         db.commit()
     except Exception as e:

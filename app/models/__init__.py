@@ -11,6 +11,10 @@ from app.models.sql_models import (
     NotificationModel,
     UserFollowModel,
     SubmissionModel,
+    ContestModel,
+    ContestParticipationModel,
+    BadgeModel,
+    UserBadgeModel,
 )
 from app.models.category import CategoryModel
 from app.models.tutorial import TutorialModel
@@ -32,6 +36,10 @@ __all__ = [
     "NotificationModel",
     "UserFollowModel",
     "SubmissionModel",
+    "ContestModel",
+    "ContestParticipationModel",
+    "BadgeModel",
+    "UserBadgeModel",
     "CategoryModel",
     "TutorialModel",
     "TopicModel",

@@ -1,13 +1,18 @@
+import uuid
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
+def _gen_progress_id():
+    return f"prog_{uuid.uuid4().hex[:16]}"
+
+
 class UserProgressModel(Base):
     __tablename__ = "user_progress"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(64), primary_key=True, default=_gen_progress_id)
     user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     topic_id = Column(String(64), ForeignKey("topics.id", ondelete="CASCADE"), index=True, nullable=False)
     is_completed = Column(Boolean, default=False)
