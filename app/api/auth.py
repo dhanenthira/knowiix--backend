@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from sqlalchemy.orm import Session
-from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse, RoleEnum
+from app.schemas.user import (
+    UserCreate, UserLogin, UserResponse, TokenResponse, RoleEnum,
+    ForgotPasswordRequest, VerifyOtpRequest, ResetPasswordRequest
+)
 from app.core.security import create_access_token, decode_token, oauth2_scheme, verify_password, get_password_hash
 from app.core.database import get_db
 from app.models.sql_models import UserModel
-from datetime import datetime
+from app.core.email_service import send_password_reset_otp_email
+from datetime import datetime, timedelta
 import uuid
+import random
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -272,4 +277,136 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
         except Exception:
             pass
     return {"access_token": "refreshed", "token_type": "bearer", "status": "ok"}
+ 
+# In-memory temporary store for OTP verifications: { email: { "otp": str, "expires_at": datetime, "verified": bool } }
+_otp_store: dict = {}
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """
+    Initiates password reset: Checks user email, generates a 6-digit OTP,
+    and dispatches the verification code directly to Gmail in the background.
+    """
+    if not db:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database connection unavailable")
+
+    email_clean = req.email.strip().lower()
+    db_user = db.query(UserModel).filter(UserModel.email.ilike(email_clean)).first()
+
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No account found associated with {email_clean}"
+        )
+
+    # Generate 6-digit OTP
+    otp_code = f"{random.randint(100000, 999999)}"
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+
+    _otp_store[email_clean] = {
+        "otp": otp_code,
+        "expires_at": expires_at,
+        "verified": False
+    }
+
+    # Dispatch Gmail OTP in background
+    user_name = db_user.name or db_user.email.split("@")[0]
+    background_tasks.add_task(send_password_reset_otp_email, email_clean, otp_code, user_name)
+
+    return {
+        "status": "success",
+        "message": f"A 6-digit verification code has been sent directly to your email inbox ({email_clean}).",
+        "email": email_clean,
+        "expires_in_minutes": 10,
+    }
+
+@router.post("/verify-otp")
+def verify_otp(req: VerifyOtpRequest):
+    """
+    Verifies that the provided 6-digit OTP matches and has not expired.
+    """
+    email_clean = req.email.strip().lower()
+    record = _otp_store.get(email_clean)
+
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No reset code was requested for this email or it has expired."
+        )
+
+    if datetime.utcnow() > record["expires_at"]:
+        _otp_store.pop(email_clean, None)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The verification code has expired. Please request a new code."
+        )
+
+    if req.otp.strip() != record["otp"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code. Please check your email and try again."
+        )
+
+    record["verified"] = True
+    return {
+        "status": "success",
+        "message": "Verification code confirmed successfully.",
+        "verified": True
+    }
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Validates OTP and sets the new encrypted password for the user.
+    """
+    if not db:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database connection unavailable")
+
+    email_clean = req.email.strip().lower()
+    record = _otp_store.get(email_clean)
+
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active password reset session found. Please start over."
+        )
+
+    if datetime.utcnow() > record["expires_at"]:
+        _otp_store.pop(email_clean, None)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The verification code has expired. Please request a new code."
+        )
+
+    if req.otp.strip() != record["otp"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code. Please verify the 6-digit code."
+        )
+
+    if len(req.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters long."
+        )
+
+    db_user = db.query(UserModel).filter(UserModel.email.ilike(email_clean)).first()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account not found."
+        )
+
+    # Update password
+    db_user.password = get_password_hash(req.new_password)
+    db.commit()
+
+    # Clear OTP
+    _otp_store.pop(email_clean, None)
+
+    return {
+        "status": "success",
+        "message": "Password updated successfully. You can now log in with your new password."
+    }
+
 

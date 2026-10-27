@@ -534,6 +534,7 @@ class UserProfileService:
                 "id": s.id,
                 "problem_id": s.problem_id,
                 "title": p_title,
+                "problem_title": p_title,
                 "slug": p_slug,
                 "difficulty": p_diff,
                 "status": (s.status or "Accepted").title(),

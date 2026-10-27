@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     # Code Execution Sandbox
     SANDBOX_TIMEOUT_SECONDS: int = 5
     SANDBOX_MAX_MEMORY_MB: int = 256
+
+    # Gmail SMTP Settings
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAILS_FROM_NAME: str = "CodeArena Security"
     
     class Config:
         case_sensitive = True
