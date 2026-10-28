@@ -57,11 +57,11 @@ def get_current_admin_user(token: str = Depends(oauth2_scheme), db: Session = De
             db_admin = UserModel(
                 id="user_admin_01",
                 student_id="ADM-001",
-                email="admin@codearena.com",
+                email="admin@knowiix.com",
                 password=get_password_hash("adminpassword123"),
                 name="System Administrator",
                 role="admin",
-                college_name="CodeArena HQ",
+                college_name="Knowiix HQ",
                 department="Platform Core",
                 graduation_year=2024,
                 bio="Platform Administrator",
@@ -89,7 +89,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(UserModel).filter(UserModel.email.ilike(email_clean)).first()
     
     # Auto-provision demo student if missing
-    if not db_user and email_clean in ["student@skillprep.edu", "student@codearena.com", "demo@gmail.com"]:
+    if not db_user and email_clean in ["student@skillprep.edu", "student@knowiix.com", "demo@gmail.com"]:
         db_user = UserModel(
             id="user_student_skillprep",
             student_id="SP-2026-1001",
@@ -117,7 +117,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
         db.refresh(db_user)
 
     # Auto-provision demo admin if missing
-    if not db_user and email_clean in ["admin@skillprep.edu", "admin@codearena.com"]:
+    if not db_user and email_clean in ["admin@skillprep.edu", "admin@knowiix.com"]:
         db_user = UserModel(
             id="user_admin_skillprep",
             student_id="ADM-001",
@@ -125,7 +125,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
             password=get_password_hash("admin123"),
             name="SkillPrep Administrator",
             role="admin",
-            college_name="CodeArena HQ",
+            college_name="Knowiix HQ",
             department="Platform Core",
             graduation_year=2024,
             bio="Platform Administrator",
@@ -148,7 +148,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
     if db_user:
         valid_pass = (
             verify_password(login_data.password, db_user.password)
-            or (db_user.email.lower() in ["student@codearena.com", "student@skillprep.edu", "demo@gmail.com"] and bool(login_data.password.strip()))
+            or (db_user.email.lower() in ["student@knowiix.com", "student@skillprep.edu", "demo@gmail.com"] and bool(login_data.password.strip()))
             or (db_user.role == "admin" and login_data.password in ["admin123", "adminpassword123", "admin", "admin@123"])
         )
     if not db_user or not valid_pass:
@@ -255,7 +255,7 @@ def send_registration_otp(
             "college_name": req.college_name or "",
             "department": req.department or "Computer Science & Engineering",
             "graduation_year": req.graduation_year or 2026,
-            "bio": req.bio or "Student joining CodeArena."
+            "bio": req.bio or "Student joining Knowiix."
         }
     }
 
@@ -281,7 +281,7 @@ def verify_registration_otp(req: VerifyRegisterOtpRequest, db: Session = Depends
     record = _register_otp_store.get(email_clean)
     input_otp = req.otp.strip()
 
-    is_demo_email = email_clean in ["student@skillprep.edu", "student@codearena.com", "demo@gmail.com"]
+    is_demo_email = email_clean in ["student@skillprep.edu", "student@knowiix.com", "demo@gmail.com"]
     is_demo_otp = input_otp in ["123456", "999999"] and is_demo_email
 
     if not record and not is_demo_otp:
@@ -321,7 +321,7 @@ def verify_registration_otp(req: VerifyRegisterOtpRequest, db: Session = Depends
         "college_name": "SkillPrep Academy",
         "department": "Computer Science & Engineering",
         "graduation_year": 2026,
-        "bio": "Student joining CodeArena."
+        "bio": "Student joining Knowiix."
     }
 
     new_id = f"user_{uuid.uuid4().hex[:8]}"
@@ -376,7 +376,7 @@ def admin_login(login_data: UserLogin, db: Session = Depends(get_db)):
     email_clean = login_data.email.strip().lower()
     db_admin = db.query(UserModel).filter(UserModel.email.ilike(email_clean), UserModel.role == "admin").first()
 
-    if not db_admin and email_clean in ["admin@skillprep.edu", "admin@codearena.com"]:
+    if not db_admin and email_clean in ["admin@skillprep.edu", "admin@knowiix.com"]:
         db_admin = UserModel(
             id="user_admin_skillprep",
             student_id="ADM-002",
@@ -450,7 +450,7 @@ def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTask
     email_clean = req.email.strip().lower()
     db_user = db.query(UserModel).filter(UserModel.email.ilike(email_clean)).first()
 
-    if not db_user and email_clean in ["student@skillprep.edu", "student@codearena.com", "demo@gmail.com"]:
+    if not db_user and email_clean in ["student@skillprep.edu", "student@knowiix.com", "demo@gmail.com"]:
         db_user = UserModel(
             id=f"user_{uuid.uuid4().hex[:8]}",
             email=email_clean,
@@ -463,7 +463,7 @@ def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTask
         db.commit()
         db.refresh(db_user)
 
-    if not db_user and email_clean in ["admin@skillprep.edu", "admin@codearena.com"]:
+    if not db_user and email_clean in ["admin@skillprep.edu", "admin@knowiix.com"]:
         db_user = UserModel(
             id=f"user_{uuid.uuid4().hex[:8]}",
             email=email_clean,
@@ -512,7 +512,7 @@ def verify_otp(req: VerifyOtpRequest):
     record = _otp_store.get(email_clean)
     input_otp = req.otp.strip()
 
-    is_demo_email = email_clean in ["student@skillprep.edu", "student@codearena.com", "admin@skillprep.edu", "admin@codearena.com"]
+    is_demo_email = email_clean in ["student@skillprep.edu", "student@knowiix.com", "admin@skillprep.edu", "admin@knowiix.com"]
     is_demo_otp = input_otp in ["123456", "999999"] and is_demo_email
 
     if not record and not is_demo_otp:
@@ -555,7 +555,7 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     record = _otp_store.get(email_clean)
     input_otp = req.otp.strip()
 
-    is_demo_email = email_clean in ["student@skillprep.edu", "student@codearena.com", "admin@skillprep.edu", "admin@codearena.com"]
+    is_demo_email = email_clean in ["student@skillprep.edu", "student@knowiix.com", "admin@skillprep.edu", "admin@knowiix.com"]
     is_demo_otp = input_otp in ["123456", "999999"] and is_demo_email
 
     if not record and not is_demo_otp:

@@ -3,10 +3,10 @@ from pydantic_settings import BaseSettings
 from typing import List
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "CodeArena API"
+    PROJECT_NAME: str = "Knowiix API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = "codearena_super_secret_jwt_key_development_2026_x89f!"
+    SECRET_KEY: str = "knowiix_super_secret_jwt_key_development_2026_x89f!"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
     ALGORITHM: str = "HS256"
     
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    EMAILS_FROM_NAME: str = "CodeArena Security"
+    EMAILS_FROM_NAME: str = "Knowiix Security"
     
     class Config:
         case_sensitive = True

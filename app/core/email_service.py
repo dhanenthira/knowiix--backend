@@ -5,14 +5,14 @@ import logging
 import os
 from app.core.config import settings
 
-logger = logging.getLogger("codearena.email")
+logger = logging.getLogger("knowiix.email")
 
 def _get_smtp_credentials():
     smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip('"\'')
     smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).strip('"\'').replace(" ", "")
     smtp_host = (os.getenv("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")).strip('"\'')
     smtp_port = int(str(os.getenv("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587)).strip('"\''))
-    from_name = (os.getenv("EMAILS_FROM_NAME") or getattr(settings, "EMAILS_FROM_NAME", "CodeArena Security")).strip('"\'')
+    from_name = (os.getenv("EMAILS_FROM_NAME") or getattr(settings, "EMAILS_FROM_NAME", "Knowiix Security")).strip('"\'')
     return smtp_user, smtp_pass, smtp_host, smtp_port, from_name
 
 def _dispatch_mime_email(to_email: str, subject: str, plain_text: str, html_content: str, email_type_label: str = "Email") -> bool:
@@ -53,11 +53,11 @@ def _dispatch_mime_email(to_email: str, subject: str, plain_text: str, html_cont
 
 def send_password_reset_otp_email(to_email: str, otp_code: str, user_name: str = "Student") -> bool:
     """
-    Sends a beautifully formatted CodeArena dark-themed Password Reset OTP email.
+    Sends a beautifully formatted Knowiix dark-themed Password Reset OTP email.
     """
     plain_text = (
         f"Hello {user_name},\n\n"
-        f"We received a request to reset your CodeArena password.\n"
+        f"We received a request to reset your Knowiix password.\n"
         f"Your 6-digit verification code (OTP) is: {otp_code}\n\n"
         f"This code expires in 10 minutes.\n"
         f"If you did not request a password reset, please ignore this email.\n"
@@ -67,7 +67,7 @@ def send_password_reset_otp_email(to_email: str, otp_code: str, user_name: str =
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Reset Your CodeArena Password</title>
+  <title>Reset Your Knowiix Password</title>
   <style>
     body {{
       margin: 0;
@@ -166,13 +166,13 @@ def send_password_reset_otp_email(to_email: str, otp_code: str, user_name: str =
 <body>
   <div class="email-container">
     <div class="header">
-      <div class="brand-title">CODE<span class="brand-accent">ARENA</span></div>
+      <div class="brand-title">KNOW<span class="brand-accent">IIX</span></div>
       <p style="margin: 4px 0 0; font-size: 12px; color: #94a3b8;">Learn • Practice • Compete</p>
     </div>
     <div class="body-content">
       <div class="greeting">Hello, {user_name}!</div>
       <p class="text-muted">
-        We received a request to reset the password for your CodeArena account associated with <strong>{to_email}</strong>.
+        We received a request to reset the password for your Knowiix account associated with <strong>{to_email}</strong>.
         Use the official verification code below to authorize this password reset:
       </p>
 
@@ -187,34 +187,34 @@ def send_password_reset_otp_email(to_email: str, otp_code: str, user_name: str =
       </div>
     </div>
     <div class="footer">
-      &copy; 2026 CodeArena Engineering. All rights reserved.<br>
+      &copy; 2026 Knowiix Engineering. All rights reserved.<br>
       This is an automated system notification. Please do not reply directly to this email.
     </div>
   </div>
 </body>
 </html>
 """
-    return _dispatch_mime_email(to_email, "CodeArena Password Reset OTP", plain_text, html_content, "Password Reset OTP email")
+    return _dispatch_mime_email(to_email, "Knowiix Password Reset OTP", plain_text, html_content, "Password Reset OTP email")
 
 def send_registration_otp_email(to_email: str, otp_code: str, user_name: str = "Student") -> bool:
     """
-    Sends a beautifully formatted CodeArena dark-themed Account Verification OTP email
+    Sends a beautifully formatted Knowiix dark-themed Account Verification OTP email
     to verify new student registration.
     """
     plain_text = (
         f"Hello {user_name}!\n\n"
-        f"Welcome to CodeArena - Learn, Practice & Compete!\n"
+        f"Welcome to Knowiix - Learn, Practice & Compete!\n"
         f"Your 6-digit account activation code (OTP) is: {otp_code}\n\n"
         f"This code expires in 10 minutes.\n"
         f"Enter this code on the registration page to activate your account and start your placement preparation.\n"
-        f"If you did not sign up for CodeArena, please ignore this email.\n"
+        f"If you did not sign up for Knowiix, please ignore this email.\n"
     )
 
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Verify Your CodeArena Account</title>
+  <title>Verify Your Knowiix Account</title>
   <style>
     body {{
       margin: 0;
@@ -324,14 +324,14 @@ def send_registration_otp_email(to_email: str, otp_code: str, user_name: str = "
 <body>
   <div class="email-container">
     <div class="header">
-      <div class="brand-title">CODE<span class="brand-accent">ARENA</span></div>
+      <div class="brand-title">KNOW<span class="brand-accent">IIX</span></div>
       <p style="margin: 4px 0 0; font-size: 12px; color: #94a3b8;">Learn • Practice • Compete</p>
     </div>
     <div class="body-content">
       <div class="welcome-pill">New Account Activation</div>
-      <div class="greeting">Welcome to CodeArena, {user_name}!</div>
+      <div class="greeting">Welcome to Knowiix, {user_name}!</div>
       <p class="text-muted">
-        Thank you for creating an account with CodeArena. To activate your account associated with <strong>{to_email}</strong> and start your placement preparation journey, please verify your email address using the official code below:
+        Thank you for creating an account with Knowiix. To activate your account associated with <strong>{to_email}</strong> and start your placement preparation journey, please verify your email address using the official code below:
       </p>
 
       <div class="otp-card">
@@ -345,11 +345,11 @@ def send_registration_otp_email(to_email: str, otp_code: str, user_name: str = "
       </div>
     </div>
     <div class="footer">
-      &copy; 2026 CodeArena Engineering. All rights reserved.<br>
+      &copy; 2026 Knowiix Engineering. All rights reserved.<br>
       This is an automated system notification. Please do not reply directly to this email.
     </div>
   </div>
 </body>
 </html>
 """
-    return _dispatch_mime_email(to_email, "CodeArena Account Activation OTP", plain_text, html_content, "Registration Activation OTP email")
+    return _dispatch_mime_email(to_email, "Knowiix Account Activation OTP", plain_text, html_content, "Registration Activation OTP email")

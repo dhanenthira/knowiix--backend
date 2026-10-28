@@ -46,7 +46,7 @@ CATEGORIES_DATA = [
                         "id": "top_html_semantics",
                         "title": "Semantic HTML: Header, Nav, Main & Footer",
                         "content": "Semantic HTML elements clearly describe their meaning to both the browser and the developer. Using elements like <header>, <nav>, <main>, <article>, <section>, and <footer> improves SEO and screen reader accessibility.",
-                        "code_example": "<header>\n    <h1>CodeArena Learning</h1>\n    <nav>\n        <a href=\"#home\">Home</a>\n        <a href=\"#tutorials\">Tutorials</a>\n    </nav>\n</header>\n<main>\n    <article>\n        <h2>Semantic Architecture</h2>\n        <p>Accessible and search engine friendly markup.</p>\n    </article>\n</main>\n<footer>\n    <p>&copy; 2026 CodeArena. All rights reserved.</p>\n</footer>",
+                        "code_example": "<header>\n    <h1>Knowiix Learning</h1>\n    <nav>\n        <a href=\"#home\">Home</a>\n        <a href=\"#tutorials\">Tutorials</a>\n    </nav>\n</header>\n<main>\n    <article>\n        <h2>Semantic Architecture</h2>\n        <p>Accessible and search engine friendly markup.</p>\n    </article>\n</main>\n<footer>\n    <p>&copy; 2026 Knowiix. All rights reserved.</p>\n</footer>",
                         "display_order": 2
                     },
                     {
@@ -216,7 +216,7 @@ CATEGORIES_DATA = [
                         "id": "top_java_basics",
                         "title": "Java Class Anatomy & JVM Memory Model",
                         "content": "Java programs are compiled into bytecode (.class) which runs on the Java Virtual Machine (JVM). Memory is divided into Heap (objects) and Stack (frames).",
-                        "code_example": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello CodeArena Java Students!\");\n    }\n}",
+                        "code_example": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello Knowiix Java Students!\");\n    }\n}",
                         "display_order": 1
                     },
                     {
@@ -385,7 +385,7 @@ CATEGORIES_DATA = [
                         "id": "top_nodejs_server",
                         "title": "Creating an Express REST Server with JSON Middleware",
                         "content": "Express is a minimalist web framework for Node.js providing a robust set of features for web and mobile applications.",
-                        "code_example": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\napp.get('/api/health', (req, res) => {\n    res.json({ status: 'healthy', platform: 'CodeArena' });\n});\n\napp.listen(3000, () => console.log('Server running on port 3000'));",
+                        "code_example": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\napp.get('/api/health', (req, res) => {\n    res.json({ status: 'healthy', platform: 'Knowiix' });\n});\n\napp.listen(3000, () => console.log('Server running on port 3000'));",
                         "display_order": 1
                     }
                 ]
@@ -511,7 +511,7 @@ def seed_learning_dashboard_data():
 
         # Seed starter progress and bookmark for demo accounts (e.g. Alex Mercer, Ananya Kumar)
         demo_users = db.query(UserModel).filter(
-            UserModel.email.in_(["student@codearena.com", "student@skillprep.edu"])
+            UserModel.email.in_(["student@knowiix.com", "student@skillprep.edu"])
         ).all()
 
         for user in demo_users:

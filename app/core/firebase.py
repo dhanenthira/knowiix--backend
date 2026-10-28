@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Optional, Dict, Any
 
-logger = logging.getLogger("codearena.firebase")
+logger = logging.getLogger("knowiix.firebase")
 
 try:
     import firebase_admin

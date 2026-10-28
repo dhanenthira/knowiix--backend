@@ -7,11 +7,11 @@ def test_root_endpoint():
     response = client.get("/")
     assert response.status_code == 200
     data = response.json()
-    assert "CodeArena" in data["platform"]
+    assert "Knowiix" in data["platform"]
 
 def test_auth_login():
     response = client.post("/api/v1/auth/login", json={
-        "email": "student@codearena.com",
+        "email": "student@knowiix.com",
         "password": "password123"
     })
     assert response.status_code == 200
@@ -21,7 +21,7 @@ def test_auth_login():
 
 def test_admin_login():
     response = client.post("/api/v1/auth/admin/login", json={
-        "email": "admin@codearena.com",
+        "email": "admin@knowiix.com",
         "password": "adminpassword123"
     })
     assert response.status_code == 200

@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from app.core.config import settings
 
-logger = logging.getLogger("codearena.database")
+logger = logging.getLogger("knowiix.database")
 
 Base = declarative_base()
 

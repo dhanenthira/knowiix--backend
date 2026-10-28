@@ -199,7 +199,7 @@ def seed_100_questions():
             student = UserModel(
                 id="user_student_01",
                 student_id="CA-2026-8042",
-                email="student@codearena.com",
+                email="student@knowiix.com",
                 password="password123",
                 name="Ananya Kumar",
                 role="student",

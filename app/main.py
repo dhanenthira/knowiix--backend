@@ -26,7 +26,7 @@ from app.api.users import router as users_router
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Backend API for CodeArena – Learn, Practice & Compete platform"
+    description="Backend API for Knowiix - Learn, Practice & Compete platform"
 )
 
 # Configure CORS
@@ -94,7 +94,7 @@ def get_student_profile_singular(
 @app.get("/")
 def root():
     return {
-        "platform": "CodeArena – Learn, Practice & Compete",
+        "platform": "Knowiix - Learn, Practice & Compete",
         "status": "online",
         "api_docs": "/docs",
         "version": settings.VERSION

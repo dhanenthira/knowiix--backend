@@ -20,7 +20,7 @@ from app.models.sql_models import (
     BadgeModel,
 )
 
-logger = logging.getLogger("codearena.init_db")
+logger = logging.getLogger("knowiix.init_db")
 
 def create_database_if_not_exists():
     """
@@ -54,17 +54,34 @@ def seed_database_records():
 
     db = SessionLocal()
     try:
+        # 0. Migrate any legacy @codearena.com user emails to @knowiix.com
+        try:
+            legacy_users = db.query(UserModel).filter(UserModel.email.like("%@codearena.com")).all()
+            for lu in legacy_users:
+                lu.email = lu.email.replace("@codearena.com", "@knowiix.com")
+            if legacy_users:
+                db.commit()
+                logger.info(f"Cleanly migrated {len(legacy_users)} legacy user email(s) to @knowiix.com")
+        except Exception as mig_err:
+            db.rollback()
+            logger.warning(f"Legacy email migration notice: {mig_err}")
+
         # 1. Ensure master administrator exists
-        admin_user = db.query(UserModel).filter(UserModel.role == "admin").first()
+        admin_user = db.query(UserModel).filter(
+            (UserModel.id == "user_admin_01") |
+            (UserModel.email == "admin@knowiix.com") |
+            (UserModel.role == "admin")
+        ).first()
+
         if not admin_user:
             admin_user = UserModel(
                 id="user_admin_01",
                 student_id="ADM-001",
-                email="admin@codearena.com",
+                email="admin@knowiix.com",
                 password=get_password_hash("adminpassword123"),
                 name="System Administrator",
                 role="admin",
-                college_name="CodeArena HQ",
+                college_name="Knowiix HQ",
                 department="Platform Core",
                 graduation_year=2024,
                 bio="Platform Administrator",
@@ -83,8 +100,17 @@ def seed_database_records():
             )
             db.add(admin_user)
             logger.info("Master Administrator verified in MySQL database.")
+        else:
+            if admin_user.college_name != "Knowiix HQ":
+                admin_user.college_name = "Knowiix HQ"
+            if not admin_user.email or "@codearena" in admin_user.email:
+                admin_user.email = "admin@knowiix.com"
 
-        skillprep_admin = db.query(UserModel).filter(UserModel.email == "admin@skillprep.edu").first()
+        skillprep_admin = db.query(UserModel).filter(
+            (UserModel.id == "user_admin_skillprep") |
+            (UserModel.email == "admin@skillprep.edu")
+        ).first()
+
         if not skillprep_admin:
             skillprep_admin = UserModel(
                 id="user_admin_skillprep",
@@ -105,12 +131,16 @@ def seed_database_records():
             logger.info("SkillPrep Administrator verified in MySQL database.")
 
         # 2. Ensure demo student account exists
-        demo_student = db.query(UserModel).filter(UserModel.email == "student@codearena.com").first()
+        demo_student = db.query(UserModel).filter(
+            (UserModel.id == "user_student_01") |
+            (UserModel.email == "student@knowiix.com")
+        ).first()
+
         if not demo_student:
             demo_student = UserModel(
                 id="user_student_01",
                 student_id="CA-2026-9042",
-                email="student@codearena.com",
+                email="student@knowiix.com",
                 password=get_password_hash("password123"),
                 name="Alex Mercer",
                 role="student",
@@ -133,8 +163,15 @@ def seed_database_records():
             )
             db.add(demo_student)
             logger.info("Demo Student account (Alex Mercer) verified in MySQL database.")
+        else:
+            if demo_student.email != "student@knowiix.com":
+                demo_student.email = "student@knowiix.com"
 
-        skillprep_student = db.query(UserModel).filter(UserModel.email == "student@skillprep.edu").first()
+        skillprep_student = db.query(UserModel).filter(
+            (UserModel.id == "user_student_skillprep") |
+            (UserModel.email == "student@skillprep.edu")
+        ).first()
+
         if not skillprep_student:
             skillprep_student = UserModel(
                 id="user_student_skillprep",
@@ -324,7 +361,7 @@ def seed_database_records():
                 BadgeModel(
                     id="badge_first_solve",
                     name="First AC",
-                    description="Solved your first coding problem on CodeArena.",
+                    description="Solved your first coding problem on Knowiix.",
                     icon="award",
                     category="problem_solving",
                     requirement_type="problems_solved",

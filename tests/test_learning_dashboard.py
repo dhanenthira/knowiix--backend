@@ -18,7 +18,7 @@ import uuid
 def auth_tokens():
     # Login user 1 (Alex Mercer)
     res1 = client.post("/api/auth/login", json={
-        "email": "student@codearena.com",
+        "email": "student@knowiix.com",
         "password": "password123"
     })
     assert res1.status_code == 200
@@ -27,7 +27,7 @@ def auth_tokens():
 
     # Provision and login a brand new unique test user (Zero activity)
     uid = uuid.uuid4().hex[:8]
-    new_user_email = f"student_{uid}@codearena.com"
+    new_user_email = f"student_{uid}@knowiix.com"
     db = SessionLocal()
     new_u = UserModel(
         id=f"user_{uid}",
@@ -63,7 +63,7 @@ def test_1_login_and_auth_me(auth_tokens):
     res = client.get("/api/auth/me", headers=headers)
     assert res.status_code == 200
     data = res.json()
-    assert data["email"] == "student@codearena.com"
+    assert data["email"] == "student@knowiix.com"
     assert data["name"] == "Alex Mercer"
     assert "avatar_url" in data or "profile_image_url" in data
 
