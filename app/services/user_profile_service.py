@@ -1,3 +1,4 @@
+import uuid
 import math
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
@@ -463,15 +464,19 @@ class UserProfileService:
                 qualifies = True
 
             if qualifies and not is_earned:
-                new_ub = UserBadgeModel(
-                    user_id=user.id,
-                    badge_id=b.id,
-                    earned_at=datetime.utcnow()
-                )
-                db.add(new_ub)
-                db.commit()
-                is_earned = True
-                earned_at = new_ub.earned_at
+                try:
+                    new_ub = UserBadgeModel(
+                        id=f"ub_{uuid.uuid4().hex[:16]}",
+                        user_id=user.id,
+                        badge_id=b.id,
+                        earned_at=datetime.utcnow()
+                    )
+                    db.add(new_ub)
+                    db.commit()
+                    is_earned = True
+                    earned_at = new_ub.earned_at
+                except Exception:
+                    db.rollback()
 
             badge_list.append({
                 "id": b.id,

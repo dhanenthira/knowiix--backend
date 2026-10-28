@@ -46,9 +46,11 @@ def on_startup():
     # Initialize MySQL tables on server start
     init_tables()
 
-# Include Routers under /api/v1 and alias under /api
-for pfx in [settings.API_V1_STR, "/api"]:
+# Include Routers under /api/v1, alias under /api, and auth directly at root
+for pfx in [settings.API_V1_STR, "/api", ""]:
     app.include_router(auth_router, prefix=pfx)
+
+for pfx in [settings.API_V1_STR, "/api"]:
     app.include_router(admin_router, prefix=pfx)
     app.include_router(students_router, prefix=pfx)
     app.include_router(questions_router, prefix=pfx)

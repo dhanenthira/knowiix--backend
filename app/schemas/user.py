@@ -67,3 +67,16 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     otp: str
     new_password: str
+
+class RegisterOtpRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    college_name: Optional[str] = None
+    department: Optional[str] = None
+    graduation_year: Optional[int] = 2026
+    bio: Optional[str] = ""
+
+class VerifyRegisterOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str

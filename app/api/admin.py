@@ -385,3 +385,147 @@ def delete_assessment_test(
     db.delete(t)
     db.commit()
     return {"status": "success", "message": f"Assessment {test_id} deleted successfully"}
+
+
+# =========================================================================
+# ADDITIONAL ADMIN ENDPOINTS FOR COMPLETE ADMIN WORKFLOWS
+# =========================================================================
+
+@router.get("/coding")
+def get_admin_coding_problems(
+    current_admin: UserResponse = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    problems = db.query(CodingProblemModel).order_by(CodingProblemModel.created_at.desc()).all()
+    res = []
+    for p in problems:
+        sub_count = db.query(SubmissionModel).filter(SubmissionModel.problem_id == p.id).count()
+        acc_count = db.query(SubmissionModel).filter(
+            SubmissionModel.problem_id == p.id,
+            SubmissionModel.status.in_(["Accepted", "accepted", "Passed", "passed"])
+        ).count()
+        acc_rate = round((acc_count / sub_count * 100), 1) if sub_count > 0 else 0.0
+        res.append({
+            "id": p.id,
+            "title": p.title,
+            "slug": p.slug,
+            "difficulty": p.difficulty,
+            "topic": p.topic,
+            "description": p.description,
+            "time_limit_seconds": p.time_limit_seconds,
+            "memory_limit_mb": p.memory_limit_mb,
+            "sample_test_cases": p.sample_test_cases or [],
+            "hidden_test_cases": p.hidden_test_cases or [],
+            "submissions_count": sub_count,
+            "acceptance_rate": acc_rate,
+            "is_published": p.is_published,
+            "created_at": p.created_at.isoformat() if p.created_at else None
+        })
+    return res
+
+@router.get("/tests")
+def get_admin_assessment_tests(
+    current_admin: UserResponse = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    tests = db.query(AssessmentTestModel).order_by(AssessmentTestModel.created_at.desc()).all()
+    res = []
+    for t in tests:
+        sub_count = db.query(SubmissionModel).filter(
+            SubmissionModel.problem_id == t.id,
+            SubmissionModel.submission_type == "test"
+        ).count()
+        res.append({
+            "id": t.id,
+            "title": t.title,
+            "description": t.description,
+            "category": t.category,
+            "difficulty": t.difficulty,
+            "duration_minutes": t.duration_minutes,
+            "total_marks": t.total_marks,
+            "total_questions": t.total_questions,
+            "status": t.status,
+            "start_time": t.start_time.isoformat() if t.start_time else None,
+            "end_time": t.end_time.isoformat() if t.end_time else None,
+            "submissions_count": sub_count,
+            "question_ids": t.question_ids or []
+        })
+    return res
+
+@router.get("/battles")
+def get_admin_battle_rooms(
+    current_admin: UserResponse = Depends(get_current_admin_user)
+):
+    from app.services.battle_manager import battle_manager
+    rooms = list(battle_manager.rooms.values())
+    active_battles = sum(1 for r in rooms if r.get("status") in ["active", "in_battle", "battling"])
+    waiting_rooms = sum(1 for r in rooms if r.get("status") == "waiting")
+    return {
+        "total_rooms": len(rooms),
+        "active_battles": active_battles,
+        "waiting_rooms": waiting_rooms,
+        "rooms": rooms
+    }
+
+@router.delete("/battles/{room_code}")
+def terminate_battle_room(
+    room_code: str,
+    current_admin: UserResponse = Depends(get_current_admin_user)
+):
+    from app.services.battle_manager import battle_manager
+    code_clean = room_code.upper().strip()
+    if code_clean in battle_manager.rooms:
+        del battle_manager.rooms[code_clean]
+        return {"status": "success", "message": f"Battle room {code_clean} terminated"}
+    raise HTTPException(status_code=404, detail="Battle room not found")
+
+@router.get("/analytics")
+def get_admin_analytics(
+    current_admin: UserResponse = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    students = db.query(UserModel).filter(UserModel.role == "student").all()
+    questions = db.query(QuestionModel).all()
+    coding_problems = db.query(CodingProblemModel).all()
+    submissions = db.query(SubmissionModel).all()
+    tests = db.query(AssessmentTestModel).all()
+
+    return {
+        "total_students": len(students),
+        "total_questions": len(questions),
+        "total_coding_problems": len(coding_problems),
+        "total_submissions": len(submissions),
+        "total_tests": len(tests),
+        "avg_accuracy": round(sum(s.overall_accuracy or 0 for s in students) / len(students), 1) if students else 0.0,
+        "top_performing_students": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "email": s.email,
+                "points": s.total_points,
+                "accuracy": s.overall_accuracy,
+                "solved": (s.problems_solved or 0) + (s.questions_solved or 0)
+            }
+            for s in sorted(students, key=lambda x: x.total_points or 0, reverse=True)[:10]
+        ]
+    }
+
+@router.get("/learning")
+def get_admin_learning_content(
+    current_admin: UserResponse = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    modules = db.query(LearningModuleModel).all()
+    lessons = db.query(LessonModel).all()
+    return {
+        "modules": [{"id": m.id, "title": m.title, "slug": m.slug, "description": m.description, "category": m.category} for m in modules],
+        "lessons": [{"id": l.id, "module_id": l.module_id, "title": l.title, "slug": l.slug, "duration_minutes": l.duration_minutes, "order": l.order} for l in lessons]
+    }

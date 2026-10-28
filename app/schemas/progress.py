@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 
 class TopicProgressResponse(BaseModel):
     id: str
@@ -26,7 +26,7 @@ class UserProgressSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class LearningActivityResponse(BaseModel):
-    id: str
+    id: Union[int, str]
     user_id: str
     tutorial_id: Optional[str] = None
     topic_id: Optional[str] = None

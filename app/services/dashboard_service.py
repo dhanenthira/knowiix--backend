@@ -559,7 +559,7 @@ class DashboardService:
         results = []
         for act, tut_title, top_title in activities:
             results.append(LearningActivityResponse(
-                id=act.id,
+                id=str(act.id),
                 user_id=act.user_id,
                 tutorial_id=act.tutorial_id,
                 topic_id=act.topic_id,

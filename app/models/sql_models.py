@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from sqlalchemy import (
     Column,
@@ -282,7 +283,7 @@ class BadgeModel(Base):
 class UserBadgeModel(Base):
     __tablename__ = "user_badges"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(64), primary_key=True, default=lambda: f"ub_{uuid.uuid4().hex[:16]}")
     user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     badge_id = Column(String(64), ForeignKey("badges.id", ondelete="CASCADE"), index=True, nullable=False)
     earned_at = Column(DateTime, default=datetime.utcnow)
